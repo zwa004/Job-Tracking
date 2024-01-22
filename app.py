@@ -1,13 +1,16 @@
 import streamlit as st
 import pandas as pd
-from database import create_job, get_all_jobs, delete_job, delete_all_jobs
+from database import create_job, get_all_jobs, delete_job, delete_all_jobs, get_uniuqe_companies, get_unique_titles
 
 def main():
     st.title("Job Hunt Tracker")
 
+    companies = get_uniuqe_companies()
+    titles = get_unique_titles()
+
     with st.form("Job Input Form", clear_on_submit=True):
-        company = st.text_input("Company", value="")
-        title = st.text_input("Job Title", value="")
+        company = st.selectbox("Company", [''] + companies)
+        title = st.selectbox("Title", [''] + titles)
         pay_range = st.text_input("Pay Range", value="")
         link = st.text_input("Job Link", value="")
         notes = st.text_area("Notes", value="")
