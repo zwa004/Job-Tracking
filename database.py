@@ -20,6 +20,11 @@ def get_all_jobs():
     jobs = pd.read_sql_query("SELECT * FROM jobs", conn)
     return jobs
 
+import streamlit as st
+# ... [rest of your imports]
+
+# ... [rest of your database functions]
+
 def delete_job(job_id):
     try:
         conn = create_connection()
@@ -27,6 +32,7 @@ def delete_job(job_id):
         cur = conn.cursor()
         cur.execute(sql, (job_id,))
         conn.commit()
+        st.session_state['cache_key'] += 1  # Increment cache key to force cache invalidation
     except Exception as e:
         print(f"An error occurred: {e}")
 
@@ -37,20 +43,9 @@ def delete_all_jobs():
         cur = conn.cursor()
         cur.execute(sql)
         conn.commit()
+        st.session_state['cache_key'] += 1  # Increment cache key to force cache invalidation
     except Exception as e:
         print(f"An error occurred: {e}")
-
-@st.cache
-def get_uniuqe_companies():
-    conn = create_connection()
-    companies = pd.read_sql_query("SELECT DISTINCT company FROM jobs", conn)
-    return companies['company'].tolist()
-
-@st.cache
-def get_unique_titles():
-    conn = create_connection()
-    titles = pd.read_sql_query("SELECT DISTINCT title FROM jobs", conn)
-    return titles['title'].tolist()
 
 # Initialize DB and table
 conn = create_connection()

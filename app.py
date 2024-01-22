@@ -1,12 +1,24 @@
 import streamlit as st
 import pandas as pd
-from database import create_job, get_all_jobs, delete_job, delete_all_jobs, get_uniuqe_companies, get_unique_titles
+from database import create_job, get_all_jobs, delete_job, delete_all_jobs, create_connection
+
+def get_unique_companies():
+    # Fetch unique companies without caching
+    conn = create_connection()
+    companies = pd.read_sql_query("SELECT DISTINCT company FROM jobs", conn)
+    return companies['company'].tolist()
+
+def get_unique_titles():
+    # Fetch unique titles without caching
+    conn = create_connection()
+    titles = pd.read_sql_query("SELECT DISTINCT title FROM jobs", conn)
+    return titles['title'].tolist()
 
 def main():
     st.title("Job Hunt Tracker")
 
-    companies = get_uniuqe_companies()
-    titles = get_unique_titles()
+    company = st.selectbox("Company", [''] + get_unique_companies())
+    title = st.selectbox("Job Title", [''] + get_unique_titles())
 
     with st.form("Job Input Form", clear_on_submit=True):
         company = st.selectbox("Company", [''] + companies)
