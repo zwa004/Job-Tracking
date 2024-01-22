@@ -34,15 +34,15 @@ def main():
                 st.success("All jobs deleted successfully!")
                 jobs = get_all_jobs()  # Refresh the list of jobs
 
-            # Display each job
-            for job in jobs.itertuples():
-                st.markdown(f"**Company:** {job.company}")
-                st.markdown(f"**Title:** {job.title}")
-                st.markdown(f"**Pay Range:** {job.pay_range}")
-                st.markdown(f"**Notes:** {job.notes}")
-                st.markdown(f"**Link:** [Here]({job.link})")
+            # In your main function, replace the for loop with this function call
+            if not jobs.empty:
+                display_jobs_with_links(jobs)
         else:
             st.write("No jobs to display.")
+        
+def display_jobs_with_links(jobs):
+    jobs['link'] = jobs['link'].apply(lambda x: f'<a href="{x}" target="_blank">Link</a>' if x else '')
+    st.write(jobs.to_html(escape=False, index=False), unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
