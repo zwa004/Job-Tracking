@@ -1,61 +1,45 @@
 import sqlite3
 import pandas as pd
-import streamlit as st
 
 def create_connection():
+    """Create a database connection to the SQLite database."""
     conn = sqlite3.connect('jobs.db')
     return conn
 
-def create_job(company, title, pay_range, notes, link):
+def create_job(title, company, pay_range, link, industry, level, application_date, notes):
+    """Create a new job entry in the jobs table."""
     conn = create_connection()
-    sql = ''' INSERT INTO jobs(company,title,pay_range,notes,link)
-              VALUES(?,?,?,?,?) '''
+    sql = '''INSERT INTO jobs(title, company, pay_range, link, industry, level, application_date, notes)
+             VALUES(?,?,?,?,?,?,?,?)'''
     cur = conn.cursor()
-    cur.execute(sql, (company, title, pay_range, notes, link))
+    cur.execute(sql, (title, company, pay_range, link, industry, level, application_date, notes))
     conn.commit()
-    return cur.lastrowid
 
 def get_all_jobs():
+    """Query all jobs from the jobs table."""
     conn = create_connection()
-    jobs = pd.read_sql_query("SELECT * FROM jobs", conn)
-    return jobs
+    sql = 'SELECT * FROM jobs'
+    cur = conn.cursor()
+    cur.execute(sql)
+    rows = cur.fetchall()
+    return pd.DataFrame(rows, columns=['id', 'title', 'company', 'pay_range', 'link', 'industry', 'level', 'application_date', 'notes'])
 
-import streamlit as st
-# ... [rest of your imports]
+# Initialize the database and the jobs table
+def init_db():
+    conn = create_connection()
+    cur = conn.cursor()
+    cur.execute('''CREATE TABLE IF NOT EXISTS jobs (
+                    id INTEGER PRIMARY KEY,
+                    title TEXT,
+                    company TEXT,
+                    pay_range TEXT,
+                    link TEXT,
+                    industry TEXT,
+                    level TEXT,
+                    application_date DATE,
+                    notes TEXT
+                );''')
+    conn.commit()
 
-# ... [rest of your database functions]
-
-def delete_job(job_id):
-    try:
-        conn = create_connection()
-        sql = 'DELETE FROM jobs WHERE id=?'
-        cur = conn.cursor()
-        cur.execute(sql, (job_id,))
-        conn.commit()
-        st.session_state['cache_key'] += 1  # Increment cache key to force cache invalidation
-    except Exception as e:
-        print(f"An error occurred: {e}")
-
-def delete_all_jobs():
-    try:
-        conn = create_connection()
-        sql = 'DELETE FROM jobs'
-        cur = conn.cursor()
-        cur.execute(sql)
-        conn.commit()
-        st.session_state['cache_key'] += 1  # Increment cache key to force cache invalidation
-    except Exception as e:
-        print(f"An error occurred: {e}")
-
-# Initialize DB and table
-conn = create_connection()
-cur = conn.cursor()
-cur.execute(''' CREATE TABLE IF NOT EXISTS jobs (
-                    id integer PRIMARY KEY,
-                    company text NOT NULL,
-                    title text,
-                    pay_range text,
-                    notes text,
-                    link text
-                ); ''')
-conn.commit()
+if __name__ == "__main__":
+    init_db()

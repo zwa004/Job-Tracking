@@ -1,63 +1,44 @@
 import streamlit as st
 import pandas as pd
-from database import create_job, get_all_jobs, delete_job, delete_all_jobs, create_connection
+import datetime
+from database import create_job, get_all_jobs
 
-def get_unique_companies():
-    # Fetch unique companies without caching
-    conn = create_connection()
-    companies = pd.read_sql_query("SELECT DISTINCT company FROM jobs", conn)
-    return companies['company'].tolist()
+# Define the pay range, experience level options, and sample industries
+pay_ranges = [f"${x}-{x+4999}" for x in range(30000, 150000, 5000)] + ["$150,000+"]
+experience_levels = ["Internship", "Entry Level", "Associate", "Mid-Level", "Senior", "Director", "Executive"]
+industries = ["Technology", "Healthcare", "Finance", "Education", "Retail", "Manufacturing", "Other"]
 
-def get_unique_titles():
-    # Fetch unique titles without caching
-    conn = create_connection()
-    titles = pd.read_sql_query("SELECT DISTINCT title FROM jobs", conn)
-    return titles['title'].tolist()
-
-def main():
-    st.title("Job Hunt Tracker")
-
-    company = st.selectbox("Company", [''] + get_unique_companies())
-    title = st.selectbox("Job Title", [''] + get_unique_titles())
-
+def input_application():
+    st.title("Input New Job Application")
     with st.form("Job Input Form", clear_on_submit=True):
-        company = st.selectbox("Company", [''] + companies)
-        title = st.selectbox("Title", [''] + titles)
-        pay_range = st.text_input("Pay Range", value="")
-        link = st.text_input("Job Link", value="")
-        notes = st.text_area("Notes", value="")
+        title = st.text_input("Job Title")
+        company = st.text_input("Company")
+        pay_range = st.selectbox("Pay Range", pay_ranges)
+        link = st.text_input("Job Link")
+        industry = st.selectbox("Industry", industries)
+        level = st.selectbox("Experience Level", experience_levels)
+        application_date = st.date_input("Application Date", datetime.date.today())
+        notes = st.text_area("Notes")
 
         submitted = st.form_submit_button("Add Job")
-
         if submitted:
-            create_job(company, title, pay_range, notes, link)
+            create_job(title, company, pay_range, link, industry, level, application_date, notes)
             st.success("Job added successfully!")
 
-    # Expander for showing/hiding jobs
-    with st.expander("Show/Hide Jobs"):
-        jobs = get_all_jobs()
-        if not jobs.empty:
-            job_to_delete = st.selectbox("Select a job to delete", jobs['id'].tolist())
+def view_applications():
+    st.title("Job Applications")
+    jobs = get_all_jobs()
+    if not jobs.empty:
+        st.dataframe(jobs)
+    else:
+        st.write("No job applications to display.")
 
-            if st.button(f"Delete Job #{job_to_delete}"):
-                delete_job(job_to_delete)
-                st.success(f"Job #{job_to_delete} deleted successfully!")
-                jobs = get_all_jobs()  # Refresh the list of jobs
-
-            if st.button("Delete All Jobs"):
-                delete_all_jobs()
-                st.success("All jobs deleted successfully!")
-                jobs = get_all_jobs()  # Refresh the list of jobs
-
-            # In your main function, replace the for loop with this function call
-            if not jobs.empty:
-                display_jobs_with_links(jobs)
-        else:
-            st.write("No jobs to display.")
-        
-def display_jobs_with_links(jobs):
-    jobs['link'] = jobs['link'].apply(lambda x: f'<a href="{x}" target="_blank">Link</a>' if x else '')
-    st.write(jobs.to_html(escape=False, index=False), unsafe_allow_html=True)
+def main():
+    st.sidebar.title("Navigation")
+    if st.sidebar.button("Input Application"):
+        input_application()
+    if st.sidebar.button("View Applications"):
+        view_applications()
 
 if __name__ == "__main__":
     main()
