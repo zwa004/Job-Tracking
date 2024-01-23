@@ -4,7 +4,7 @@ import datetime
 from database import create_job, get_all_jobs
 
 # Define the pay range, experience level options, and sample industries
-pay_ranges = [f"${x}-{x+4999}" for x in range(30000, 150000, 5000)] + ["$150,000+"]
+pay_ranges = ["<$30000"] + [f"${x}-{x+4999}" for x in range(30000, 150000, 5000)] + ["$150000+"]
 experience_levels = ["Internship", "Entry Level", "Associate", "Mid-Level", "Senior", "Director", "Executive"]
 industries = ["Technology", "Healthcare", "Finance", "Education", "Retail", "Manufacturing", "Other"]
 
@@ -22,8 +22,10 @@ def input_application():
 
         submitted = st.form_submit_button("Add Job")
         if submitted:
+            print("Submitting job...")
             create_job(title, company, pay_range, link, industry, level, application_date, notes)
             st.success("Job added successfully!")
+            st.experimental_rerun()
 
 def view_applications():
     st.title("Job Applications")
